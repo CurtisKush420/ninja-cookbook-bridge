@@ -34,6 +34,9 @@
   button:disabled { opacity:.55; cursor:not-allowed; }
   .actions { display:flex; flex-wrap:wrap; gap:9px; margin-top:16px; }
   .fine { font-size:.8rem; color:var(--muted); }
+  .sticky-save { position:sticky; top:8px; z-index:20; display:flex; gap:10px; align-items:center; justify-content:space-between; padding:10px; margin:-6px -6px 14px; border:1px solid var(--line); border-radius:13px; background:rgba(255,255,255,.96); box-shadow:0 4px 14px #13261a18; backdrop-filter:blur(8px); }
+  .sticky-save span { font-size:.86rem; font-weight:700; color:var(--muted); }
+  .sticky-save button { flex:0 0 auto; }
   code { overflow-wrap:anywhere; }
   @media (max-width:540px) { main { padding:12px 10px 34px; } .card { padding:14px; border-radius:15px; } .grid { grid-template-columns:1fr; } .actions button { flex:1 1 100%; } }
 </style>
@@ -87,6 +90,7 @@
   </section>
 
   <section id="recipeCard" class="card hidden">
+    <div class="sticky-save"><span>Ready to save?</span><button id="topSaveRecipeBtn" type="submit" form="recipeForm">Save recipe</button></div>
     <div class="eyebrow" id="modeLabel">Review before saving</div>
     <h2 id="recipeHeading">Recipe details</h2>
     <p class="muted">Check the values before saving. You can edit any field here.</p>
@@ -308,6 +312,7 @@ function loadSelectedTarget() {
   $('modeLabel').textContent = 'Update existing recipe';
   $('recipeHeading').textContent = 'Review your changes';
   $('saveRecipeBtn').textContent = 'Update recipe';
+  $('topSaveRecipeBtn').textContent = 'Update recipe';
   hide('successCard');
 }
 function payloadToDbRow() {
@@ -403,6 +408,7 @@ $('recipeForm').addEventListener('submit', async (event) => {
   event.preventDefault();
   if (!supabase || !session) { showStatus('saveStatus', 'Sign in before saving.', true); return; }
   $('saveRecipeBtn').disabled = true;
+  $('topSaveRecipeBtn').disabled = true;
   try {
     const row = payloadToDbRow();
     const savedMode = actionMode;
@@ -422,7 +428,7 @@ $('recipeForm').addEventListener('submit', async (event) => {
     setTop('Success. The database confirmed the ' + (savedMode === 'update' ? 'update' : 'save') + '.');
   } catch (err) {
     showStatus('saveStatus', err.message || 'Unable to save recipe.', true);
-  } finally { $('saveRecipeBtn').disabled = false; }
+  } finally { $('saveRecipeBtn').disabled = false; $('topSaveRecipeBtn').disabled = false; }
 });
 $('clearBtn').addEventListener('click', () => {
   if (actionMode === 'update' && selectedRecord) rowToForm(selectedRecord);
@@ -438,6 +444,7 @@ $('newRecipeBtn').addEventListener('click', () => {
   $('modeLabel').textContent = 'Review before saving';
   $('recipeHeading').textContent = 'Recipe details';
   $('saveRecipeBtn').textContent = 'Save recipe';
+  $('topSaveRecipeBtn').textContent = 'Save recipe';
   setTop('Ready for another recipe. Open a new handoff link from ChatGPT when needed.');
 });
 
@@ -453,6 +460,7 @@ try {
       $('modeLabel').textContent = 'New recipe from ChatGPT';
       $('recipeHeading').textContent = 'Review before saving';
       $('saveRecipeBtn').textContent = 'Save recipe';
+  $('topSaveRecipeBtn').textContent = 'Save recipe';
     } else {
       hide('recipeCard');
       show('targetCard');

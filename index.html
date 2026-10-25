@@ -51,7 +51,7 @@
     <h2>Connect your cookbook</h2>
     <p class="muted">Enter your Supabase project URL and <strong>publishable key</strong> (or legacy anon key) once in this browser. Do not use a service-role or secret key.</p>
     <label for="projectUrl">Supabase project URL</label>
-    <input id="projectUrl" type="url" value="https://duazyqcaunpfpxrimqwvv.supabase.co" autocomplete="url">
+    <input id="projectUrl" type="url" value="https://duazyqcaunfpfxrimqwv.supabase.co" autocomplete="url">
     <label for="publishableKey">Supabase publishable key / anon key</label>
     <input id="publishableKey" type="password" autocomplete="off" placeholder="Paste your publishable key here">
     <div class="actions">
@@ -63,6 +63,7 @@
   <section id="authCard" class="card hidden">
     <h2 id="authHeading">Sign in to your cookbook</h2>
     <p class="muted">Use the same email and password you use in the Ninja Air Fryer Cookbook app. Only your own recipes should be accessible under the database's row-level security policies.</p>
+    <div class="actions" style="margin-top:8px"><button id="changeConfigBtn" class="secondary" type="button">Change connection</button></div>
     <div id="signedInBlock" class="hidden">
       <div id="signedInText" class="status"></div>
       <div class="actions"><button id="signOutBtn" class="secondary" type="button">Sign out</button></div>
@@ -362,6 +363,16 @@ $('saveConfigBtn').addEventListener('click', () => {
   localStorage.setItem(CONFIG_KEY, JSON.stringify({ url, key }));
   location.reload();
 });
+$('changeConfigBtn').addEventListener('click', () => {
+  const config = readConfig();
+  // Restore the verified project URL while keeping the publishable key already entered.
+  $('projectUrl').value = 'https://duazyqcaunfpfxrimqwv.supabase.co';
+  $('publishableKey').value = config?.key || '';
+  hide('authCard');
+  show('configCard');
+  setTop('Check the project URL below, then save the connection again. Your saved publishable key is retained in this browser.');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
 $('signInBtn').addEventListener('click', async () => {
   if (!supabase) return;
   const email = $('email').value.trim();
@@ -374,7 +385,10 @@ $('signInBtn').addEventListener('click', async () => {
     $('password').value = '';
     hide('authStatus');
   } catch (err) {
-    showStatus('authStatus', err.message || 'Sign-in failed.', true);
+    const message = err?.message === 'Failed to fetch'
+      ? 'Could not reach Supabase. Check that the Project URL and publishable key belong to the same project, then try again.'
+      : (err.message || 'Sign-in failed.');
+    showStatus('authStatus', message, true);
   } finally { $('signInBtn').disabled = false; }
 });
 $('signOutBtn').addEventListener('click', async () => {

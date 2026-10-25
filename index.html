@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Ninja Cookbook Recipe Bridge</title>
+<style>
+  :root { color-scheme: light; --ink:#17211b; --muted:#59645e; --line:#d8e0da; --paper:#f5f7f4; --card:#fff; --green:#176b48; --green2:#e7f3ec; --red:#a52a2a; --redbg:#fff0ef; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; color:var(--ink); background:var(--paper); line-height:1.45; }
+  main { width:min(760px,100%); margin:0 auto; padding:20px 14px 48px; }
+  header { padding:22px 4px 14px; }
+  .eyebrow { text-transform:uppercase; letter-spacing:.12em; font-size:.73rem; color:var(--green); font-weight:800; }
+  h1 { font-size:clamp(1.65rem,5vw,2.35rem); line-height:1.1; margin:.35rem 0 .6rem; }
+  h2 { font-size:1.15rem; margin:0 0 .5rem; }
+  p { margin:.35rem 0 .8rem; }
+  .muted { color:var(--muted); font-size:.93rem; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:18px; padding:18px; margin:12px 0; box-shadow:0 3px 14px #13261a08; }
+  .hidden { display:none !important; }
+  .status { display:flex; gap:9px; align-items:flex-start; padding:11px 13px; border-radius:12px; background:var(--green2); color:#174b35; font-size:.92rem; margin:10px 0; }
+  .status.error { background:var(--redbg); color:var(--red); }
+  label { display:block; font-weight:650; font-size:.88rem; margin:11px 0 5px; }
+  input, textarea, select { width:100%; border:1px solid #c8d2cb; border-radius:10px; padding:11px 12px; background:#fff; color:var(--ink); font:inherit; }
+  textarea { resize:vertical; min-height:100px; }
+  input:focus, textarea:focus, select:focus { outline:2px solid #86bca0; outline-offset:1px; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:0 12px; }
+  .checkrow { display:flex; gap:10px; align-items:center; margin:12px 0; }
+  .checkrow input { width:auto; transform:scale(1.15); }
+  .checkrow label { margin:0; font-weight:550; }
+  button { border:0; border-radius:11px; padding:11px 16px; font:inherit; font-weight:750; cursor:pointer; background:var(--green); color:white; }
+  button.secondary { background:#e9eeea; color:#24372c; }
+  button.danger { background:var(--red); }
+  button:disabled { opacity:.55; cursor:not-allowed; }
+  .actions { display:flex; flex-wrap:wrap; gap:9px; margin-top:16px; }
+  .fine { font-size:.8rem; color:var(--muted); }
+  code { overflow-wrap:anywhere; }
+  @media (max-width:540px) { main { padding:12px 10px 34px; } .card { padding:14px; border-radius:15px; } .grid { grid-template-columns:1fr; } .actions button { flex:1 1 100%; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="eyebrow">ChatGPT → your cookbook</div>
+    <h1>Ninja Cookbook Recipe Bridge</h1>
+    <p class="muted">Open a recipe handoff link, review the details, and save it to your own Supabase cookbook. This page does not use an OpenAI API key.</p>
+    <div id="topStatus" class="status">Preparing recipe bridge…</div>
+  </header>
+
+  <section id="configCard" class="card">
+    <h2>Connect your cookbook</h2>
+    <p class="muted">Enter your Supabase project URL and <strong>publishable key</strong> (or legacy anon key) once in this browser. Do not use a service-role or secret key.</p>
+    <label for="projectUrl">Supabase project URL</label>
+    <input id="projectUrl" type="url" value="https://duazyqcaunpfpxrimqwvv.supabase.co" autocomplete="url">
+    <label for="publishableKey">Supabase publishable key / anon key</label>
+    <input id="publishableKey" type="password" autocomplete="off" placeholder="Paste your publishable key here">
+    <div class="actions">
+      <button id="saveConfigBtn" type="button">Save connection</button>
+    </div>
+    <p class="fine">The URL and publishable key are saved only in this browser's local storage. They are not inserted into the recipe links or sent to ChatGPT. Your password is not saved by this page; Supabase handles sign-in.</p>
+  </section>
+
+  <section id="authCard" class="card hidden">
+    <h2 id="authHeading">Sign in to your cookbook</h2>
+    <p class="muted">Use the same email and password you use in the Ninja Air Fryer Cookbook app. Only your own recipes should be accessible under the database's row-level security policies.</p>
+    <div id="signedInBlock" class="hidden">
+      <div id="signedInText" class="status"></div>
+      <div class="actions"><button id="signOutBtn" class="secondary" type="button">Sign out</button></div>
+    </div>
+    <div id="signInBlock">
+      <label for="email">Email address</label>
+      <input id="email" type="email" autocomplete="username" required>
+      <label for="password">Password</label>
+      <input id="password" type="password" autocomplete="current-password" required>
+      <div class="actions"><button id="signInBtn" type="button">Sign in</button></div>
+    </div>
+    <div id="authStatus" class="status hidden"></div>
+  </section>
+
+  <section id="targetCard" class="card hidden">
+    <h2>Choose the recipe to update</h2>
+    <p class="muted">The update link identifies a recipe by its current title. Choose the correct row here before saving. Only recipes visible to your signed-in account are listed.</p>
+    <label for="targetRecipe">Your recipes</label>
+    <select id="targetRecipe"><option value="">Loading your recipes…</option></select>
+    <div class="actions"><button id="loadTargetBtn" type="button" class="secondary">Load selected recipe</button></div>
+  </section>
+
+  <section id="recipeCard" class="card hidden">
+    <div class="eyebrow" id="modeLabel">Review before saving</div>
+    <h2 id="recipeHeading">Recipe details</h2>
+    <p class="muted">Check the values before saving. You can edit any field here.</p>
+    <form id="recipeForm">
+      <label for="title">Recipe title *</label>
+      <input id="title" required maxlength="180">
+      <div class="grid">
+        <div><label for="foodState">Food state</label><input id="foodState" placeholder="e.g. Refrigerated"></div>
+        <div><label for="quantity">Quantity</label><input id="quantity" placeholder="e.g. 2 slices"></div>
+        <div><label for="appliance">Appliance</label><input id="appliance" value="Ninja dual-basket air fryer"></div>
+        <div><label for="cookingMode">Cooking mode</label><input id="cookingMode" value="Air Fry"></div>
+        <div><label for="temperatureF">Temperature (°F)</label><input id="temperatureF" type="number" min="0" max="1000" step="1" placeholder="e.g. 350"></div>
+        <div><label for="cookingTimeMinutes">Time (minutes)</label><input id="cookingTimeMinutes" type="number" min="0" max="1440" step="1" placeholder="e.g. 5"></div>
+        <div><label for="basket">Basket</label><input id="basket" placeholder="Either basket"></div>
+      </div>
+      <div class="checkrow"><input id="preheatRequired" type="checkbox"><label for="preheatRequired">Preheating is required</label></div>
+      <label for="instructions">Cooking instructions</label>
+      <textarea id="instructions" rows="6" placeholder="Step-by-step instructions"></textarea>
+      <label for="personalNotes">Personal notes</label>
+      <textarea id="personalNotes" rows="3" placeholder="Your notes or adjustments"></textarea>
+      <div class="checkrow"><input id="isFavorite" type="checkbox"><label for="isFavorite">Mark as favorite</label></div>
+      <div id="saveStatus" class="status hidden"></div>
+      <div class="actions">
+        <button id="saveRecipeBtn" type="submit">Save recipe</button>
+        <button id="clearBtn" type="button" class="secondary">Clear form</button>
+      </div>
+    </form>
+  </section>
+
+  <section id="successCard" class="card hidden">
+    <h2 id="successHeading">Saved</h2>
+    <div id="successText" class="status"></div>
+    <p class="muted">Your recipe is stored in Supabase. Return to the Android app and reopen the cookbook to see the latest data.</p>
+    <div class="actions"><button id="newRecipeBtn" type="button">Prepare another recipe</button></div>
+  </section>
+
+  <section class="card">
+    <h2>How this works</h2>
+    <p class="muted">ChatGPT supplies the recipe in the link. This page lets you review the data and sends it directly to your Supabase project after you sign in. The page never uses a service-role key, and it relies on your database's row-level security to limit which rows your account can access.</p>
+    <p class="fine">Use a private device you trust. Signing out ends the Supabase session in this browser.</p>
+  </section>
+</main>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+const $ = (id) => document.getElementById(id);
+const CONFIG_KEY = 'ninjaCookbookBridgeConfig_v1';
+let supabase = null;
+let session = null;
+let recipePayload = null;
+let actionMode = 'create';
+let targetTitle = '';
+let ownedRecipes = [];
+let selectedRecord = null;
+let updatePayloadKeys = new Set();
+
+function showStatus(id, message, isError = false) {
+  const el = $(id);
+  el.textContent = message;
+  el.classList.remove('hidden', 'error');
+  if (isError) el.classList.add('error');
+}
+function hide(id) { $(id).classList.add('hidden'); }
+function show(id) { $(id).classList.remove('hidden'); }
+function setTop(message, isError = false) { showStatus('topStatus', message, isError); }
+function safeString(value) { return value == null ? '' : String(value); }
+function normalizeRecipeObject(input) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('The recipe data must be a JSON object.');
+  if (input.recipe && typeof input.recipe === 'object' && !Array.isArray(input.recipe)) return { ...input, ...input.recipe };
+  return input;
+}
+function readRecipeFromUrl() {
+  const q = new URLSearchParams(location.search);
+  let raw = q.get('recipe');
+  let raw64 = q.get('recipe64');
+  if (!raw && !raw64 && location.hash.length > 1) {
+    const h = new URLSearchParams(location.hash.slice(1));
+    raw = h.get('recipe');
+    raw64 = h.get('recipe64');
+  }
+  if (!raw && !raw64) return null;
+  try {
+    let parsed;
+    if (raw64) {
+      const padded = raw64.replace(/-/g, '+').replace(/_/g, '/');
+      const bytes = Uint8Array.from(atob(padded + '='.repeat((4 - padded.length % 4) % 4)), c => c.charCodeAt(0));
+      parsed = JSON.parse(new TextDecoder().decode(bytes));
+    } else {
+      parsed = JSON.parse(raw);
+    }
+    return normalizeRecipeObject(parsed);
+  } catch (err) {
+    throw new Error('The recipe link could not be read. Ask ChatGPT to regenerate the handoff link.');
+  }
+}
+function readConfig() {
+  try { return JSON.parse(localStorage.getItem(CONFIG_KEY) || 'null'); } catch { return null; }
+}
+function mountClient() {
+  const config = readConfig();
+  if (!config || !config.url || !config.key) {
+    supabase = null;
+    show('configCard');
+    hide('authCard');
+    setTop('Connect this page to your existing Supabase project to continue.');
+    return;
+  }
+  $('projectUrl').value = config.url;
+  $('publishableKey').value = config.key;
+  supabase = createClient(config.url, config.key, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false } });
+  hide('configCard');
+  show('authCard');
+  supabase.auth.getSession().then(({ data, error }) => {
+    if (error) { setTop('Could not check your sign-in session: ' + error.message, true); return; }
+    session = data.session;
+    renderAuth();
+  }).catch(err => setTop('Unable to connect to Supabase: ' + err.message, true));
+  supabase.auth.onAuthStateChange((_event, newSession) => {
+    session = newSession;
+    renderAuth();
+  });
+}
+function renderAuth() {
+  if (!session) {
+    show('signInBlock'); hide('signedInBlock');
+    $('authHeading').textContent = 'Sign in to your cookbook';
+    setTop('Recipe link loaded. Sign in with the same account you use in the Android app.');
+    return;
+  }
+  hide('signInBlock'); show('signedInBlock');
+  $('authHeading').textContent = 'Cookbook connected';
+  $('signedInText').textContent = 'Signed in as ' + (session.user?.email || 'your Supabase account');
+  setTop('Connected. Your database policies control which recipes this account can access.');
+  loadUserRecipesIfNeeded();
+  if (actionMode === 'create') {
+    show('recipeCard');
+    hide('targetCard');
+  }
+}
+async function loadUserRecipesIfNeeded() {
+  if (!session || !supabase) return;
+  if (actionMode !== 'update') return;
+  show('targetCard');
+  $('targetRecipe').innerHTML = '<option value="">Loading your recipes…</option>';
+  const { data, error } = await supabase.from('recipes')
+    .select('id,title,search_terms,appliance,food_state,quantity,cooking_mode,temperature_f,cooking_time_minutes,preheat_required,basket,instructions,personal_notes,is_favorite,created_at,updated_at')
+    .order('title', { ascending: true });
+  if (error) {
+    showStatus('topStatus', 'Could not load your recipes: ' + error.message, true);
+    return;
+  }
+  ownedRecipes = data || [];
+  const select = $('targetRecipe');
+  select.innerHTML = '';
+  if (!ownedRecipes.length) {
+    select.innerHTML = '<option value="">No recipes were found for this account</option>';
+    return;
+  }
+  select.append(new Option('Choose a recipe…', ''));
+  ownedRecipes.forEach((recipe) => {
+    const suffix = recipe.updated_at ? ' · updated ' + new Date(recipe.updated_at).toLocaleDateString() : '';
+    select.append(new Option(recipe.title + suffix, recipe.id));
+  });
+  const exactMatches = ownedRecipes.filter(r => targetTitle && r.title.trim().toLowerCase() === targetTitle.trim().toLowerCase());
+  if (exactMatches.length === 1) {
+    select.value = exactMatches[0].id;
+    loadSelectedTarget();
+  } else if (exactMatches.length > 1) {
+    showStatus('topStatus', 'More than one recipe matches “' + targetTitle + '”. Choose the correct one before loading it.');
+  } else if (targetTitle) {
+    showStatus('topStatus', 'Choose the recipe you want to update. No exact title match was found for “' + targetTitle + '”.');
+  }
+}
+function rowToForm(row) {
+  $('title').value = safeString(row.title);
+  $('foodState').value = safeString(row.food_state);
+  $('quantity').value = safeString(row.quantity);
+  $('appliance').value = safeString(row.appliance || 'Ninja dual-basket air fryer');
+  $('cookingMode').value = safeString(row.cooking_mode || 'Air Fry');
+  $('temperatureF').value = row.temperature_f == null ? '' : String(row.temperature_f);
+  $('cookingTimeMinutes').value = row.cooking_time_minutes == null ? '' : String(row.cooking_time_minutes);
+  $('basket').value = safeString(row.basket || 'Either basket');
+  $('preheatRequired').checked = Boolean(row.preheat_required);
+  $('instructions').value = safeString(row.instructions);
+  $('personalNotes').value = safeString(row.personal_notes);
+  $('isFavorite').checked = Boolean(row.is_favorite);
+}
+function payloadToForm(payload, preserveExisting = false) {
+  const current = preserveExisting && selectedRecord ? { ...selectedRecord } : {};
+  const values = {
+    title: 'title', foodState: 'food_state', quantity: 'quantity', appliance: 'appliance',
+    cookingMode: 'cooking_mode', temperatureF: 'temperature_f', cookingTimeMinutes: 'cooking_time_minutes',
+    preheatRequired: 'preheat_required', basket: 'basket', instructions: 'instructions',
+    personalNotes: 'personal_notes', isFavorite: 'is_favorite', searchTerms: 'search_terms'
+  };
+  Object.entries(values).forEach(([payloadKey, dbKey]) => {
+    if (Object.prototype.hasOwnProperty.call(payload, payloadKey)) current[dbKey] = payload[payloadKey];
+  });
+  if (!preserveExisting) {
+    current.title = payload.title || '';
+    current.appliance = current.appliance || 'Ninja dual-basket air fryer';
+    current.cooking_mode = current.cooking_mode || 'Air Fry';
+    current.basket = current.basket || 'Either basket';
+  }
+  rowToForm(current);
+}
+function loadSelectedTarget() {
+  const id = $('targetRecipe').value;
+  selectedRecord = ownedRecipes.find(r => String(r.id) === String(id)) || null;
+  if (!selectedRecord) {
+    hide('recipeCard');
+    return;
+  }
+  rowToForm(selectedRecord);
+  // Apply only fields explicitly provided by ChatGPT. Existing untouched fields stay intact.
+  if (recipePayload) payloadToForm(recipePayload, true);
+  show('recipeCard');
+  $('modeLabel').textContent = 'Update existing recipe';
+  $('recipeHeading').textContent = 'Review your changes';
+  $('saveRecipeBtn').textContent = 'Update recipe';
+  hide('successCard');
+}
+function payloadToDbRow() {
+  const nullableText = (id) => $(id).value.trim() || null;
+  const integerValue = (id) => {
+    const raw = $(id).value.trim();
+    if (!raw) return null;
+    const n = Number(raw);
+    if (!Number.isInteger(n)) throw new Error($(id).labels?.[0]?.textContent + ' must be a whole number.');
+    return n;
+  };
+  const title = $('title').value.trim();
+  if (!title) throw new Error('Recipe title is required.');
+  const existingSearchTerms = selectedRecord?.search_terms;
+  const suppliedSearchTerms = Array.isArray(recipePayload?.searchTerms) ? recipePayload.searchTerms : [];
+  const terms = [...new Set([title.toLowerCase(), ...suppliedSearchTerms, ...(Array.isArray(existingSearchTerms) ? existingSearchTerms : [])].map(s => String(s).trim().toLowerCase()).filter(Boolean))];
+  return {
+    title,
+    search_terms: terms,
+    appliance: $('appliance').value.trim() || 'Ninja dual-basket air fryer',
+    food_state: nullableText('foodState'),
+    quantity: nullableText('quantity'),
+    cooking_mode: $('cookingMode').value.trim() || 'Air Fry',
+    temperature_f: integerValue('temperatureF'),
+    cooking_time_minutes: integerValue('cookingTimeMinutes'),
+    preheat_required: $('preheatRequired').checked,
+    basket: $('basket').value.trim() || 'Either basket',
+    instructions: nullableText('instructions'),
+    personal_notes: nullableText('personalNotes'),
+    is_favorite: $('isFavorite').checked
+  };
+}
+function clearAfterSuccess() {
+  history.replaceState(null, '', location.pathname);
+  recipePayload = null;
+  actionMode = 'create';
+  targetTitle = '';
+  selectedRecord = null;
+  ownedRecipes = [];
+  hide('recipeCard'); hide('targetCard');
+  $('recipeForm').reset();
+}
+
+$('saveConfigBtn').addEventListener('click', () => {
+  const url = $('projectUrl').value.trim().replace(/\/+$/, '');
+  const key = $('publishableKey').value.trim();
+  if (!/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(url)) {
+    showStatus('topStatus', 'Enter your Supabase project URL, such as https://your-project.supabase.co.', true); return;
+  }
+  if (!key || /service[_ -]?role|secret/i.test(key)) {
+    showStatus('topStatus', 'Use the publishable key or legacy anon key only. Do not use a service-role or secret key.', true); return;
+  }
+  localStorage.setItem(CONFIG_KEY, JSON.stringify({ url, key }));
+  location.reload();
+});
+$('signInBtn').addEventListener('click', async () => {
+  if (!supabase) return;
+  const email = $('email').value.trim();
+  const password = $('password').value;
+  if (!email || !password) { showStatus('authStatus', 'Enter your email address and password.', true); return; }
+  $('signInBtn').disabled = true;
+  try {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    $('password').value = '';
+    hide('authStatus');
+  } catch (err) {
+    showStatus('authStatus', err.message || 'Sign-in failed.', true);
+  } finally { $('signInBtn').disabled = false; }
+});
+$('signOutBtn').addEventListener('click', async () => {
+  if (!supabase) return;
+  const { error } = await supabase.auth.signOut();
+  if (error) showStatus('authStatus', error.message, true);
+  else { session = null; renderAuth(); }
+});
+$('loadTargetBtn').addEventListener('click', loadSelectedTarget);
+$('targetRecipe').addEventListener('change', () => { selectedRecord = null; });
+$('recipeForm').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  if (!supabase || !session) { showStatus('saveStatus', 'Sign in before saving.', true); return; }
+  $('saveRecipeBtn').disabled = true;
+  try {
+    const row = payloadToDbRow();
+    const savedMode = actionMode;
+    let result;
+    if (savedMode === 'update') {
+      if (!selectedRecord?.id) throw new Error('Choose an existing recipe before updating.');
+      result = await supabase.from('recipes').update(row).eq('id', selectedRecord.id).select('id,title').single();
+    } else {
+      result = await supabase.from('recipes').insert(row).select('id,title').single();
+    }
+    if (result.error) throw result.error;
+    $('successHeading').textContent = savedMode === 'update' ? 'Recipe updated' : 'Recipe saved';
+    $('successText').textContent = '“' + (result.data?.title || row.title) + '” was ' + (savedMode === 'update' ? 'updated' : 'saved') + ' in your cookbook.';
+    show('successCard'); hide('recipeCard'); hide('targetCard');
+    clearAfterSuccess();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTop('Success. The database confirmed the ' + (savedMode === 'update' ? 'update' : 'save') + '.');
+  } catch (err) {
+    showStatus('saveStatus', err.message || 'Unable to save recipe.', true);
+  } finally { $('saveRecipeBtn').disabled = false; }
+});
+$('clearBtn').addEventListener('click', () => {
+  if (actionMode === 'update' && selectedRecord) rowToForm(selectedRecord);
+  else if (recipePayload) payloadToForm(recipePayload, false);
+  else $('recipeForm').reset();
+  hide('saveStatus');
+});
+$('newRecipeBtn').addEventListener('click', () => {
+  hide('successCard');
+  if (actionMode === 'update') { actionMode = 'create'; }
+  $('recipeForm').reset();
+  show('recipeCard'); hide('targetCard');
+  $('modeLabel').textContent = 'Review before saving';
+  $('recipeHeading').textContent = 'Recipe details';
+  $('saveRecipeBtn').textContent = 'Save recipe';
+  setTop('Ready for another recipe. Open a new handoff link from ChatGPT when needed.');
+});
+
+try {
+  recipePayload = readRecipeFromUrl();
+  if (recipePayload) {
+    actionMode = String(recipePayload.action || recipePayload.mode || (recipePayload.targetTitle ? 'update' : 'create')).toLowerCase() === 'update' ? 'update' : 'create';
+    targetTitle = safeString(recipePayload.targetTitle || recipePayload.matchTitle || '');
+    updatePayloadKeys = new Set(Object.keys(recipePayload));
+    if (actionMode === 'create') {
+      payloadToForm(recipePayload, false);
+      show('recipeCard');
+      $('modeLabel').textContent = 'New recipe from ChatGPT';
+      $('recipeHeading').textContent = 'Review before saving';
+      $('saveRecipeBtn').textContent = 'Save recipe';
+    } else {
+      hide('recipeCard');
+      show('targetCard');
+    }
+  } else {
+    setTop('No recipe data was included in this link. Open a recipe handoff link created by ChatGPT.');
+  }
+} catch (err) {
+  setTop(err.message || 'Unable to read recipe link.', true);
+}
+mountClient();
+</script>
+</body>
+</html>

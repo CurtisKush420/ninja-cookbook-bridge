@@ -168,6 +168,39 @@ function hide(id) { $(id).classList.add('hidden'); }
 function show(id) { $(id).classList.remove('hidden'); }
 function setTop(message, isError = false) { showStatus('topStatus', message, isError); }
 function safeString(value) { return value == null ? '' : String(value); }
+  
+function updateImagePreview() {
+  const url = $('imageUrl').value.trim();
+  const container = $('imagePreviewContainer');
+  const image = $('imagePreview');
+
+  container.classList.add('hidden');
+  image.onload = null;
+  image.onerror = null;
+  image.removeAttribute('src');
+
+  if (!url) return;
+
+  try {
+    const parsedUrl = new URL(url);
+    if (parsedUrl.protocol !== 'https:') return;
+  } catch {
+    return;
+  }
+
+  image.onload = () => {
+    container.classList.remove('hidden');
+  };
+
+  image.onerror = () => {
+    container.classList.add('hidden');
+  };
+
+  image.src = url;
+}
+
+$('imageUrl').addEventListener('input', updateImagePreview);
+
 function normalizeRecipeObject(input) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('The recipe data must be a JSON object.');
   if (input.recipe && typeof input.recipe === 'object' && !Array.isArray(input.recipe)) return { ...input, ...input.recipe };

@@ -286,6 +286,7 @@ function rowToForm(row) {
   $('preheatRequired').checked = Boolean(row.preheat_required);
   $('instructions').value = safeString(row.instructions);
   $('personalNotes').value = safeString(row.personal_notes);
+    $('imageUrl').value = safeString(row.image_url);
   $('isFavorite').checked = Boolean(row.is_favorite);
 }
 function payloadToForm(payload, preserveExisting = false) {

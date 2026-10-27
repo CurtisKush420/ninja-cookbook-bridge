@@ -358,6 +358,7 @@ function loadSelectedTarget() {
     updateImagePreview();
   // Apply only fields explicitly provided by ChatGPT. Existing untouched fields stay intact.
   if (recipePayload) payloadToForm(recipePayload, true);
+    updateImagePreview();
   show('recipeCard');
   $('modeLabel').textContent = 'Update existing recipe';
   $('recipeHeading').textContent = 'Review your changes';

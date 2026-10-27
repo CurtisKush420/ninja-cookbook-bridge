@@ -208,6 +208,115 @@ function updateImagePreview() {
 }
 
 $('imageUrl').addEventListener('input', updateImagePreview);
+  
+async function searchRecipePhotos() {
+  const title = $('title').value.trim();
+  const button = $('searchPhotosBtn');
+  const results = $('photoSearchResults');
+
+  if (!title) {
+    showStatus('photoSearchStatus', 'Enter a recipe title before searching.', true);
+    return;
+  }
+
+  button.disabled = true;
+  results.replaceChildren();
+  showStatus('photoSearchStatus', 'Searching Wikimedia Commons for recipe photos…');
+
+  try {
+    const params = new URLSearchParams({
+      action: 'query',
+      generator: 'search',
+      gsrsearch: title + ' food',
+      gsrnamespace: '6',
+      gsrlimit: '8',
+      prop: 'imageinfo',
+      iiprop: 'url|extmetadata',
+      iiurlwidth: '400',
+      format: 'json',
+      origin: '*'
+    });
+
+    const response = await fetch(
+      'https://commons.wikimedia.org/w/api.php?' + params
+    );
+
+    if (!response.ok) throw new Error('The photo search service could not be reached.');
+
+    const data = await response.json();
+    const pages = Object.values(data.query?.pages || {});
+
+    const photos = pages.filter(page =>
+      page.imageinfo?.[0]?.thumburl &&
+      page.imageinfo?.[0]?.url
+    );
+
+    if (!photos.length) {
+      showStatus(
+        'photoSearchStatus',
+        'No suitable photos were found. You can try a shorter recipe title or continue without a photo.'
+      );
+      return;
+    }
+
+    photos.forEach(page => {
+      const info = page.imageinfo[0];
+      const card = document.createElement('div');
+      card.className = 'card';
+
+      const image = document.createElement('img');
+      image.src = info.thumburl;
+      image.alt = page.title.replace(/^File:/, '');
+      image.loading = 'lazy';
+      image.style.cssText =
+        'width:100%;max-height:220px;object-fit:contain;border-radius:10px;';
+
+      const name = document.createElement('p');
+      name.textContent = page.title.replace(/^File:/, '');
+
+      const source = document.createElement('a');
+      source.href = info.descriptionurl;
+      source.target = '_blank';
+      source.rel = 'noopener noreferrer';
+      source.textContent = 'View source and license';
+      source.style.display = 'inline-block';
+      source.style.marginBottom = '12px';
+
+      const choose = document.createElement('button');
+      choose.type = 'button';
+      choose.textContent = 'Use this photo';
+
+      choose.addEventListener('click', () => {
+        $('imageUrl').value = info.url;
+        updateImagePreview();
+        showStatus(
+          'photoSearchStatus',
+          'Photo selected. Check the preview before saving the recipe.'
+        );
+        $('imageUrl').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+
+      card.append(image, name, source, choose);
+      results.append(card);
+    });
+
+    showStatus(
+      'photoSearchStatus',
+      'Found ' + photos.length + ' image results. Check each photo and its license before choosing one.'
+    );
+  } catch (error) {
+    showStatus(
+      'photoSearchStatus',
+      error.message || 'Photo search failed. You can still save your recipe.',
+      true
+    );
+  } finally {
+    button.disabled = false;
+  }
+}
+
+$('searchPhotosBtn').addEventListener('click', searchRecipePhotos);
+
 
 function normalizeRecipeObject(input) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('The recipe data must be a JSON object.');

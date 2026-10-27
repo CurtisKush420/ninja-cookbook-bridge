@@ -244,7 +244,9 @@ async function loadUserRecipesIfNeeded() {
   show('targetCard');
   $('targetRecipe').innerHTML = '<option value="">Loading your recipes…</option>';
   const { data, error } = await supabase.from('recipes')
-    .select('id,title,search_terms,appliance,food_state,quantity,cooking_mode,temperature_f,cooking_time_minutes,preheat_required,basket,instructions,personal_notes,is_favorite,created_at,updated_at')
+    
+    .select('id,title,search_terms,appliance,food_state,quantity,cooking_mode,temperature_f,cooking_time_minutes,preheat_required,basket,instructions,personal_notes,image_url,is_favorite,created_at,updated_at')
+
     .order('title', { ascending: true });
   if (error) {
     showStatus('topStatus', 'Could not load your recipes: ' + error.message, true);

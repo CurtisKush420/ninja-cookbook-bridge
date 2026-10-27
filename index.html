@@ -315,7 +315,12 @@ async function searchRecipePhotos() {
   }
 }
 
-$('searchPhotosBtn').addEventListener('click', searchRecipePhotos);
+
+$('searchPhotosBtn').addEventListener('click', () => {
+  showStatus('photoSearchStatus', 'Button clicked! Starting photo search…');
+  searchRecipePhotos();
+});
+
 
 
 function normalizeRecipeObject(input) {

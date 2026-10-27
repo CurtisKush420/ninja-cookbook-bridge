@@ -109,9 +109,16 @@
       <div class="checkrow"><input id="preheatRequired" type="checkbox"><label for="preheatRequired">Preheating is required</label></div>
       <label for="instructions">Cooking instructions</label>
       <textarea id="instructions" rows="6" placeholder="Step-by-step instructions"></textarea>
+      
       <label for="personalNotes">Personal notes</label>
       <textarea id="personalNotes" rows="3" placeholder="Your notes or adjustments"></textarea>
+
+      <label for="imageUrl">Recipe photo URL</label>
+      <input id="imageUrl" type="url" placeholder="Photo URL will appear here">
+      <p class="fine">You can leave this blank if no suitable photo is available.</p>
+
       <div class="checkrow"><input id="isFavorite" type="checkbox"><label for="isFavorite">Mark as favorite</label></div>
+
       <div id="saveStatus" class="status hidden"></div>
       <div class="actions">
         <button id="saveRecipeBtn" type="submit">Save recipe</button>

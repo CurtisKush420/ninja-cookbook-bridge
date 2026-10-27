@@ -355,6 +355,7 @@ function loadSelectedTarget() {
     return;
   }
   rowToForm(selectedRecord);
+    updateImagePreview();
   // Apply only fields explicitly provided by ChatGPT. Existing untouched fields stay intact.
   if (recipePayload) payloadToForm(recipePayload, true);
   show('recipeCard');

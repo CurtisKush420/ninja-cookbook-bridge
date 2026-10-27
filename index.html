@@ -350,9 +350,12 @@ function payloadToDbRow() {
     cooking_time_minutes: integerValue('cookingTimeMinutes'),
     preheat_required: $('preheatRequired').checked,
     basket: $('basket').value.trim() || 'Either basket',
+    
     instructions: nullableText('instructions'),
     personal_notes: nullableText('personalNotes'),
+    image_url: nullableText('imageUrl'),
     is_favorite: $('isFavorite').checked
+
   };
 }
 function clearAfterSuccess() {

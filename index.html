@@ -288,12 +288,15 @@ function rowToForm(row) {
 }
 function payloadToForm(payload, preserveExisting = false) {
   const current = preserveExisting && selectedRecord ? { ...selectedRecord } : {};
+  
   const values = {
     title: 'title', foodState: 'food_state', quantity: 'quantity', appliance: 'appliance',
     cookingMode: 'cooking_mode', temperatureF: 'temperature_f', cookingTimeMinutes: 'cooking_time_minutes',
     preheatRequired: 'preheat_required', basket: 'basket', instructions: 'instructions',
-    personalNotes: 'personal_notes', isFavorite: 'is_favorite', searchTerms: 'search_terms'
+    personalNotes: 'personal_notes', isFavorite: 'is_favorite', searchTerms: 'search_terms',
+    imageUrl: 'image_url'
   };
+
   Object.entries(values).forEach(([payloadKey, dbKey]) => {
     if (Object.prototype.hasOwnProperty.call(payload, payloadKey)) current[dbKey] = payload[payloadKey];
   });

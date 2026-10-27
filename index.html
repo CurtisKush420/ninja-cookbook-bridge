@@ -508,6 +508,7 @@ try {
     updatePayloadKeys = new Set(Object.keys(recipePayload));
     if (actionMode === 'create') {
       payloadToForm(recipePayload, false);
+            updateImagePreview();
       show('recipeCard');
       $('modeLabel').textContent = 'New recipe from ChatGPT';
       $('recipeHeading').textContent = 'Review before saving';

@@ -6,39 +6,40 @@
 <meta name="referrer" content="no-referrer">
 <title>Ninja Cookbook Recipe Bridge</title>
 <style>
-  :root { color-scheme: light; --ink:#17211b; --muted:#59645e; --line:#d8e0da; --paper:#f5f7f4; --card:#fff; --green:#176b48; --green2:#e7f3ec; --red:#a52a2a; --redbg:#fff0ef; }
+  :root { color-scheme:dark; --ink:#f1f1ed; --muted:#a7aaa5; --line:#343a3b; --paper:#15191b; --card:#202628; --green:#d28a32; --green2:#263b32; --red:#ff8b80; --redbg:#472b2a; --amber:#e39a3b; }
   * { box-sizing:border-box; }
-  body { margin:0; font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; color:var(--ink); background:var(--paper); line-height:1.45; }
+  body { margin:0; font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; color:var(--ink); background:radial-gradient(ellipse at top, #252d30 0%, #15191b 58%); line-height:1.45; min-height:100vh; }
   main { width:min(760px,100%); margin:0 auto; padding:20px 14px 48px; }
   header { padding:12px 4px 8px; }
-  .eyebrow { text-transform:uppercase; letter-spacing:.12em; font-size:.7rem; color:var(--green); font-weight:800; }
-  h1 { font-size:clamp(1.45rem,4.5vw,1.9rem); line-height:1.1; margin:.25rem 0 .4rem; }
-  header > p { margin:.25rem 0 .45rem; font-size:.88rem; }
-  .compact-status { padding:7px 10px; border-radius:9px; font-size:.82rem; margin:7px 0 0; }
-  h2 { font-size:1.15rem; margin:0 0 .5rem; }
+  .eyebrow { text-transform:uppercase; letter-spacing:.12em; font-size:.7rem; color:var(--amber); font-weight:800; }
+  h1 { font-size:clamp(1.45rem,4.5vw,1.9rem); line-height:1.1; margin:.25rem 0 .4rem; color:#fff; }
+  .compact-status { padding:9px 12px; border-radius:10px; font-size:.84rem; margin:9px 0 0; }
+  h2 { font-size:1.15rem; margin:0 0 .5rem; color:#fff; }
   p { margin:.35rem 0 .8rem; }
   .muted { color:var(--muted); font-size:.93rem; }
-  .card { background:var(--card); border:1px solid var(--line); border-radius:18px; padding:18px; margin:12px 0; box-shadow:0 3px 14px #13261a08; }
+  .card { background:linear-gradient(145deg,#242b2e,#1e2426); border:1px solid var(--line); border-radius:18px; padding:18px; margin:12px 0; box-shadow:0 8px 24px #0005; }
   .hidden { display:none !important; }
-  .status { display:flex; gap:9px; align-items:flex-start; padding:11px 13px; border-radius:12px; background:var(--green2); color:#174b35; font-size:.92rem; margin:10px 0; }
-  .status.error { background:var(--redbg); color:var(--red); }
-  label { display:block; font-weight:650; font-size:.88rem; margin:11px 0 5px; }
-  input, textarea, select { width:100%; border:1px solid #c8d2cb; border-radius:10px; padding:11px 12px; background:#fff; color:var(--ink); font:inherit; }
+  .status { display:flex; gap:9px; align-items:flex-start; padding:11px 13px; border-radius:12px; background:var(--green2); color:#c6e8d4; font-size:.92rem; margin:10px 0; border:1px solid #355a46; }
+  .status.error { background:var(--redbg); color:var(--red); border-color:#74423e; }
+  label { display:block; font-weight:650; font-size:.88rem; margin:11px 0 5px; color:#e5e5df; }
+  input, textarea, select { width:100%; border:1px solid #424a4c; border-radius:10px; padding:11px 12px; background:#171c1e; color:var(--ink); font:inherit; }
+  input::placeholder, textarea::placeholder { color:#777f80; }
   textarea { resize:vertical; min-height:100px; }
-  input:focus, textarea:focus, select:focus { outline:2px solid #86bca0; outline-offset:1px; }
+  input:focus, textarea:focus, select:focus { outline:2px solid var(--amber); outline-offset:1px; }
   .grid { display:grid; grid-template-columns:1fr 1fr; gap:0 12px; }
   .checkrow { display:flex; gap:10px; align-items:center; margin:12px 0; }
-  .checkrow input { width:auto; transform:scale(1.15); }
+  .checkrow input { width:auto; accent-color:var(--amber); transform:scale(1.15); }
   .checkrow label { margin:0; font-weight:550; }
-  button { border:0; border-radius:11px; padding:11px 16px; font:inherit; font-weight:750; cursor:pointer; background:var(--green); color:white; }
-  button.secondary { background:#e9eeea; color:#24372c; }
-  button.danger { background:var(--red); }
+  button { border:0; border-radius:11px; padding:11px 16px; font:inherit; font-weight:750; cursor:pointer; background:linear-gradient(135deg,#e6a34b,#c77a25); color:#21180d; }
+  button.secondary { background:#343d40; color:#e6e8e3; border:1px solid #485154; }
+  button.danger { background:#8e3933; color:#fff; }
   button:disabled { opacity:.55; cursor:not-allowed; }
   .actions { display:flex; flex-wrap:wrap; gap:9px; margin-top:16px; }
   .fine { font-size:.8rem; color:var(--muted); }
-  .sticky-save { position:sticky; top:8px; z-index:20; display:flex; gap:10px; align-items:center; justify-content:space-between; padding:10px; margin:-6px -6px 14px; border:1px solid var(--line); border-radius:13px; background:rgba(255,255,255,.96); box-shadow:0 4px 14px #13261a18; backdrop-filter:blur(8px); }
+  .sticky-save { position:sticky; top:8px; z-index:20; display:flex; gap:10px; align-items:center; justify-content:space-between; padding:10px; margin:-6px -6px 14px; border:1px solid #454d4f; border-radius:13px; background:rgba(31,38,40,.96); box-shadow:0 4px 14px #0007; backdrop-filter:blur(8px); }
   .sticky-save span { font-size:.86rem; font-weight:700; color:var(--muted); }
   .sticky-save button { flex:0 0 auto; }
+  a { color:#f0b35e; }
   code { overflow-wrap:anywhere; }
   @media (max-width:540px) { main { padding:12px 10px 34px; } .card { padding:14px; border-radius:15px; } .grid { grid-template-columns:1fr; } .actions button { flex:1 1 100%; } }
 </style>
@@ -48,7 +49,6 @@
   <header>
     <div class="eyebrow">ChatGPT → your cookbook</div>
     <h1>Ninja Cookbook Recipe Bridge</h1>
-    <p class="muted">Open a recipe handoff link, review the details, and save it to your own Supabase cookbook. This page does not use an OpenAI API key.</p>
     <div id="topStatus" class="status compact-status">Preparing recipe bridge…</div>
   </header>
 
@@ -67,7 +67,6 @@
 
   <section id="authCard" class="card hidden">
     <h2 id="authHeading">Sign in to your cookbook</h2>
-    <p class="muted">Use the same email and password you use in the Ninja Air Fryer Cookbook app. Only your own recipes should be accessible under the database's row-level security policies.</p>
     <div id="signInBlock">
       <label for="email">Email address</label>
       <input id="email" type="email" autocomplete="username" required>
@@ -413,13 +412,13 @@ function mountClient() {
 }
 function renderAuth() {
   if (!session) {
-    show('signInBlock'); hide('signedInBlock'); show('accountCard');
+    show('authCard'); show('signInBlock'); hide('signedInBlock'); show('accountCard');
     $('authHeading').textContent = 'Sign in to your cookbook';
     setTop('Recipe link loaded. Sign in with the same account you use in the Android app.');
     return;
   }
+  hide('authCard');
   hide('signInBlock'); show('signedInBlock'); show('accountCard');
-  $('authHeading').textContent = 'Cookbook connected';
   $('signedInText').textContent = 'Signed in as ' + (session.user?.email || 'your Supabase account');
   setTop('Connected. Your database policies control which recipes this account can access.');
   loadUserRecipesIfNeeded();

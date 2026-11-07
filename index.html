@@ -10,9 +10,11 @@
   * { box-sizing:border-box; }
   body { margin:0; font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; color:var(--ink); background:var(--paper); line-height:1.45; }
   main { width:min(760px,100%); margin:0 auto; padding:20px 14px 48px; }
-  header { padding:22px 4px 14px; }
-  .eyebrow { text-transform:uppercase; letter-spacing:.12em; font-size:.73rem; color:var(--green); font-weight:800; }
-  h1 { font-size:clamp(1.65rem,5vw,2.35rem); line-height:1.1; margin:.35rem 0 .6rem; }
+  header { padding:12px 4px 8px; }
+  .eyebrow { text-transform:uppercase; letter-spacing:.12em; font-size:.7rem; color:var(--green); font-weight:800; }
+  h1 { font-size:clamp(1.45rem,4.5vw,1.9rem); line-height:1.1; margin:.25rem 0 .4rem; }
+  header > p { margin:.25rem 0 .45rem; font-size:.88rem; }
+  .compact-status { padding:7px 10px; border-radius:9px; font-size:.82rem; margin:7px 0 0; }
   h2 { font-size:1.15rem; margin:0 0 .5rem; }
   p { margin:.35rem 0 .8rem; }
   .muted { color:var(--muted); font-size:.93rem; }
@@ -47,7 +49,7 @@
     <div class="eyebrow">ChatGPT → your cookbook</div>
     <h1>Ninja Cookbook Recipe Bridge</h1>
     <p class="muted">Open a recipe handoff link, review the details, and save it to your own Supabase cookbook. This page does not use an OpenAI API key.</p>
-    <div id="topStatus" class="status">Preparing recipe bridge…</div>
+    <div id="topStatus" class="status compact-status">Preparing recipe bridge…</div>
   </header>
 
   <section id="configCard" class="card">
@@ -66,11 +68,6 @@
   <section id="authCard" class="card hidden">
     <h2 id="authHeading">Sign in to your cookbook</h2>
     <p class="muted">Use the same email and password you use in the Ninja Air Fryer Cookbook app. Only your own recipes should be accessible under the database's row-level security policies.</p>
-    <div class="actions" style="margin-top:8px"><button id="changeConfigBtn" class="secondary" type="button">Change connection</button></div>
-    <div id="signedInBlock" class="hidden">
-      <div id="signedInText" class="status"></div>
-      <div class="actions"><button id="signOutBtn" class="secondary" type="button">Sign out</button></div>
-    </div>
     <div id="signInBlock">
       <label for="email">Email address</label>
       <input id="email" type="email" autocomplete="username" required>
@@ -97,6 +94,20 @@
     <form id="recipeForm">
       <label for="title">Recipe title *</label>
       <input id="title" required maxlength="180">
+
+      <label for="imageUrl">Recipe photo URL</label>
+      <input id="imageUrl" type="url" placeholder="Photo URL will appear here">
+      <div id="imagePreviewContainer" class="hidden">
+  <img id="imagePreview" alt="Recipe photo preview" style="width:100%;max-height:260px;object-fit:contain;border-radius:12px;margin-top:10px;">
+</div>
+      <p class="fine">You can leave this blank if no suitable photo is available.</p>
+      
+      <div class="actions">
+        <button id="searchPhotosBtn" type="button" class="secondary">Find recipe photos</button>
+      </div>
+      <p class="fine">Search free images, review the results, and choose the photo that matches your recipe.</p>
+      <div id="photoSearchStatus" class="status hidden"></div>
+      <div id="photoSearchResults"></div>
       <div class="grid">
         <div><label for="foodState">Food state</label><input id="foodState" placeholder="e.g. Refrigerated"></div>
         <div><label for="quantity">Quantity</label><input id="quantity" placeholder="e.g. 2 slices"></div>
@@ -113,19 +124,7 @@
       <label for="personalNotes">Personal notes</label>
       <textarea id="personalNotes" rows="3" placeholder="Your notes or adjustments"></textarea>
 
-      <label for="imageUrl">Recipe photo URL</label>
-      <input id="imageUrl" type="url" placeholder="Photo URL will appear here">
-      <div id="imagePreviewContainer" class="hidden">
-  <img id="imagePreview" alt="Recipe photo preview" style="width:100%;max-height:260px;object-fit:contain;border-radius:12px;margin-top:10px;">
-</div>
-      <p class="fine">You can leave this blank if no suitable photo is available.</p>
-      
-      <div class="actions">
-        <button id="searchPhotosBtn" type="button" class="secondary">Find recipe photos</button>
-      </div>
-      <p class="fine">Search free images, review the results, and choose the photo that matches your recipe.</p>
-      <div id="photoSearchStatus" class="status hidden"></div>
-      <div id="photoSearchResults"></div>
+
 
 
       <div class="checkrow"><input id="isFavorite" type="checkbox"><label for="isFavorite">Mark as favorite</label></div>
@@ -149,6 +148,17 @@
     <h2>How this works</h2>
     <p class="muted">ChatGPT supplies the recipe in the link. This page lets you review the data and sends it directly to your Supabase project after you sign in. The page never uses a service-role key, and it relies on your database's row-level security to limit which rows your account can access.</p>
     <p class="fine">Use a private device you trust. Signing out ends the Supabase session in this browser.</p>
+  </section>
+
+  <section id="accountCard" class="card hidden">
+    <h2>Account &amp; Connection</h2>
+    <div id="signedInBlock" class="hidden">
+      <div id="signedInText" class="status"></div>
+      <div class="actions"><button id="signOutBtn" class="secondary" type="button">Sign out</button></div>
+    </div>
+    <div class="actions">
+      <button id="changeConfigBtn" class="secondary" type="button">Change connection</button>
+    </div>
   </section>
 </main>
 
@@ -381,11 +391,13 @@ function mountClient() {
     supabase = null;
     show('configCard');
     hide('authCard');
+    hide('accountCard');
     setTop('Connect this page to your existing Supabase project to continue.');
     return;
   }
   $('projectUrl').value = config.url;
   $('publishableKey').value = config.key;
+  show('accountCard');
   supabase = createClient(config.url, config.key, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false } });
   hide('configCard');
   show('authCard');
@@ -401,12 +413,12 @@ function mountClient() {
 }
 function renderAuth() {
   if (!session) {
-    show('signInBlock'); hide('signedInBlock');
+    show('signInBlock'); hide('signedInBlock'); show('accountCard');
     $('authHeading').textContent = 'Sign in to your cookbook';
     setTop('Recipe link loaded. Sign in with the same account you use in the Android app.');
     return;
   }
-  hide('signInBlock'); show('signedInBlock');
+  hide('signInBlock'); show('signedInBlock'); show('accountCard');
   $('authHeading').textContent = 'Cookbook connected';
   $('signedInText').textContent = 'Signed in as ' + (session.user?.email || 'your Supabase account');
   setTop('Connected. Your database policies control which recipes this account can access.');
@@ -570,6 +582,7 @@ $('changeConfigBtn').addEventListener('click', () => {
   $('projectUrl').value = 'https://duazyqcaunfpfxrimqwv.supabase.co';
   $('publishableKey').value = config?.key || '';
   hide('authCard');
+  hide('accountCard');
   show('configCard');
   setTop('Check the project URL below, then save the connection again. Your saved publishable key is retained in this browser.');
   window.scrollTo({ top: 0, behavior: 'smooth' });

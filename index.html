@@ -77,14 +77,6 @@
     <div id="authStatus" class="status hidden"></div>
   </section>
 
-  <section id="targetCard" class="card hidden">
-    <h2>Choose the recipe to update</h2>
-    <p class="muted">The update link identifies a recipe by its current title. Choose the correct row here before saving. Only recipes visible to your signed-in account are listed.</p>
-    <label for="targetRecipe">Your recipes</label>
-    <select id="targetRecipe"><option value="">Loading your recipes…</option></select>
-    <div class="actions"><button id="loadTargetBtn" type="button" class="secondary">Load selected recipe</button></div>
-  </section>
-
   <section id="recipeCard" class="card hidden">
     <div class="sticky-save"><span>Ready to save?</span><button id="topSaveRecipeBtn" type="submit" form="recipeForm">Save recipe</button></div>
     <div class="eyebrow" id="modeLabel">Review before saving</div>
@@ -148,6 +140,15 @@
     <p class="muted">ChatGPT supplies the recipe in the link. This page lets you review the data and sends it directly to your Supabase project after you sign in. The page never uses a service-role key, and it relies on your database's row-level security to limit which rows your account can access.</p>
     <p class="fine">Use a private device you trust. Signing out ends the Supabase session in this browser.</p>
   </section>
+
+  <section id="targetCard" class="card hidden">
+    <h2>Choose the recipe to update</h2>
+    <p class="muted">The update link identifies a recipe by its current title. Choose the correct row here before saving. Only recipes visible to your signed-in account are listed.</p>
+    <label for="targetRecipe">Your recipes</label>
+    <select id="targetRecipe"><option value="">Loading your recipes…</option></select>
+    <div class="actions"><button id="loadTargetBtn" type="button" class="secondary">Load selected recipe</button></div>
+  </section>
+
 
   <section id="accountCard" class="card hidden">
     <h2>Account &amp; Connection</h2>

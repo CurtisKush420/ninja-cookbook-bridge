@@ -109,11 +109,13 @@
         <div><label for="basket">Basket</label><input id="basket" placeholder="Either basket"></div>
       </div>
       <div class="checkrow"><input id="preheatRequired" type="checkbox"><label for="preheatRequired">Preheating is required</label></div>
-      <label for="instructions">Cooking instructions</label>
-      <textarea id="instructions" rows="6" placeholder="Step-by-step instructions"></textarea>
-      
-      <label for="personalNotes">Personal notes</label>
-      <textarea id="personalNotes" rows="3" placeholder="Your notes or adjustments"></textarea>
+      <label for="instructions">Cooking instructions · one numbered step per line</label>
+      <textarea id="instructions" rows="7" placeholder="1. Arrange the food in a single layer.&#10;2. Air fry at the listed temperature for the first interval.&#10;3. Turn or shake the food, then finish cooking.&#10;4. Check for doneness and add time if needed."></textarea>
+      <p class="fine">Keep each action on its own line. Use numbered steps rather than comma-separated sentences so the Android cookbook can display the instructions clearly.</p>
+
+      <label for="personalNotes">Personal notes (optional)</label>
+      <textarea id="personalNotes" rows="3" placeholder="Your own adjustments, reminders, or results"></textarea>
+      <p class="fine">Personal notes are saved separately from the cooking instructions.</p>
 
 
 
